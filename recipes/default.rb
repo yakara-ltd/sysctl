@@ -72,5 +72,18 @@ if sysctl_config_file
     source 'sysctl.conf.erb'
     mode '0644'
     notifies :restart, 'service[procps]', :immediately
+    notifies :run, 'execute[sysctl-update-initramfs]', :delayed
+  end
+
+  execute 'sysctl-update-initramfs' do
+    cmd = value_for_platform_family(
+      # Debian doesn't currently include sysctl files
+      # 'debian' => 'update-initramfs -k all -u',
+      'rhel' => 'dracut --force --regenerate-all'
+    )
+
+    command cmd
+    action :nothing
+    not_if { cmd.nil? }
   end
 end
